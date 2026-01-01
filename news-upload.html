@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | SFADC Gallery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #543d85;
+            --secondary-color: #668bb4;
+            --bg-light: #f8f9fa;
+            --slate-200: #e2e8f0;
+            --slate-800: #1e293b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        /* RESET & LAYOUT */
+        body { 
+            font-family: 'Manrope', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--slate-800); 
+            margin: 0; 
+            padding: 0; /* Padding moved to container for full-width nav */
+        }
+        
+        /* --- ADMIN NAVIGATION STYLES --- */
+        .admin-navbar {
+            background-color: var(--slate-800);
+            padding: 0 20px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .admin-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        .admin-brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #FFD700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-links {
+            display: flex;
+            gap: 25px;
+            height: 100%;
+        }
+        .admin-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .admin-link:hover {
+            color: #ffffff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .admin-link.active {
+            color: #ffffff;
+            border-bottom-color: #FFD700;
+        }
+        
+        /* Nav Responsive */
+        @media (max-width: 768px) {
+            .admin-nav-container {
+                flex-direction: column;
+                height: auto;
+                padding: 10px 0;
+            }
+            .admin-brand { margin-bottom: 10px; }
+            .admin-links { gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%; }
+            .admin-link { height: auto; padding: 5px 10px; border-bottom: none; background: rgba(255,255,255,0.1); border-radius: 4px; }
+            .admin-link.active { background: var(--primary-color); }
+        }
+
+        /* --- PAGE CONTENT --- */
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        
+        h1 { text-align: center; color: var(--primary-color); margin-bottom: 40px; }
+        
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            border: 1px solid var(--slate-200);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg-light);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-color);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+        
+        input[type="text"], input[type="date"], select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--slate-200);
+            border-radius: 8px;
+            font-family: inherit;
+            box-sizing: border-box; 
+            transition: border-color 0.3s;
+            font-size: 16px; 
+        }
+        input:focus, textarea:focus { border-color: var(--primary-color); outline: none; }
+        
+        /* Spotlight Toggle Styling */
+        .spotlight-toggle-container {
+            background-color: #f0fdf4; 
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #15803d;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--success);
+        }
+
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover { background-color: #3e2d61; }
+        .btn-submit.editing { background-color: var(--warning); color: black; }
+        .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* Manage Content Section Styles */
+        .content-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .content-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            border: 1px solid var(--slate-200);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .content-item:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* Updated Image Styles */
+        .item-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--slate-200);
+            background-color: #ddd;
+            flex-shrink: 0;
+        }
+
+        .item-info { flex: 1; min-width: 0; }
+        .item-title { 
+            font-weight: 700; 
+            color: var(--slate-800); 
+            margin-bottom: 4px;
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        .item-meta { font-size: 0.85rem; color: #666; display: flex; gap: 10px; align-items: center; }
+        .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #ddd; white-space: nowrap; }
+        
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 20px;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-edit { background-color: #e0f2fe; color: var(--secondary-color); }
+        .btn-edit:hover { background-color: var(--secondary-color); color: white; }
+        
+        .btn-delete { background-color: #fee2e2; color: var(--danger); }
+        .btn-delete:hover { background-color: var(--danger); color: white; }
+
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--slate-200); overflow-x: auto; }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- RESPONSIVE DESIGN IMPROVEMENTS --- */
+        @media (max-width: 600px) {
+            .container { margin-top: 20px; }
+            
+            h1 { font-size: 1.75rem; margin-bottom: 25px; }
+            
+            .admin-section { padding: 20px; }
+            
+            .section-title { font-size: 1.25rem; }
+
+            .row { grid-template-columns: 1fr; gap: 0; }
+            
+            .spotlight-toggle-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .spotlight-toggle-container > div {
+                width: 100%;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+            }
+
+            .content-item {
+                flex-direction: column;
+                align-items: flex-start;
+                position: relative;
+            }
+
+            .content-item .item-img {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 10px;
+            }
+
+            .item-info { width: 100%; }
+
+            .item-title { white-space: normal; margin-bottom: 8px; }
+
+            .item-meta { flex-wrap: wrap; gap: 8px; }
+
+            .item-actions {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 15px;
+                justify-content: flex-end;
+                border-top: 1px solid var(--slate-200);
+                padding-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVIGATION BAR -->
+<nav class="admin-navbar">
+    <div class="admin-nav-container">
+        <a href="#" class="admin-brand"><i class="fas fa-user-shield"></i> SFADC Admin</a>
+        <div class="admin-links">
+            <a href="news-upload.html" class="admin-link active"><i class="fas fa-newspaper"></i> News & Events</a>
+            <a href="publications-upload.html" class="admin-link"><i class="fas fa-book-open"></i> Publications</a>
+            <a href="submitted_email.html" class="admin-link"><i class="fas fa-envelope"></i> Inbox</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <h1><i class="fas fa-user-cog"></i> Gallery Admin</h1>
+
+    <!-- News Form Section -->
+    <div class="admin-section">
+        <h2 class="section-title"><i class="fas fa-pen-nib"></i> Publish News / Event</h2>
+        <form id="newsForm">
+            <input type="hidden" id="newsEditId" value=""> <!-- Hidden ID for editing -->
+
+            <div class="form-group">
+                <label>Article Title</label>
+                <input type="text" id="newsTitle" placeholder="e.g., Thahaduth: Sufi Engagement" required>
+            </div>
+
+            <div class="form-group">
+                <label>Description (Summary)</label>
+                <textarea id="newsDesc" rows="4" placeholder="Brief summary for the card..." required></textarea>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="newsCategory">
+                        <option value="academics">Academics</option>
+                        <option value="events">Events</option>
+                        <option value="union">Union</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Event Date</label>
+                    <input type="date" id="newsDate" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Image</label>
+                <input type="file" id="newsImage" accept="image/*">
+                <small id="imageHelp" style="color: #666; display:none; margin-top: 5px;">Leave empty to keep current image while editing.</small>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--slate-200); margin: 20px 0;">
+
+            <div class="spotlight-toggle-container">
+                <label class="toggle-label" for="isSpotlight">
+                    <input type="checkbox" id="isSpotlight">
+                    <span><i class="fas fa-star"></i> Also show in Spotlight Slider?</span>
+                </label>
+                
+                <div style="flex: 1; max-width: 200px; margin-left: 20px;">
+                    <input type="text" id="spotlightTag" placeholder="Tag (e.g. Featured)" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <button type="submit" id="newsSubmitBtn" class="btn-submit">
+                <span class="loading-spinner" id="newsSpinner"></span>
+                <span id="newsBtnText">Publish Article</span>
+            </button>
+            <button type="button" id="newsCancelBtn" class="btn-submit" style="background: #666; margin-top: 10px; display: none;">Cancel Edit</button>
+        </form>
+    </div>
+
+    <!-- Upcoming Events Form Section -->
+    <div class="admin-section">
+        <h2 class="section-title"><i class="far fa-calendar-alt"></i> Upcoming Events List</h2>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">Add items to the small sidebar list (dates only).</p>
+        <form id="upcomingForm">
+            <input type="hidden" id="eventEditId" value="">
+
+            <div class="form-group">
+                <label>Event Name</label>
+                <input type="text" id="upEventName" placeholder="e.g., Annual Hadith Conference" required>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="upEventDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Badge Color</label>
+                    <select id="upEventColor">
+                        <option value="bg-blue">Blue (General)</option>
+                        <option value="bg-green">Green (Campus)</option>
+                        <option value="bg-red">Red (Important)</option>
+                        <option value="bg-amber">Amber (Urgent)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="upEventLoc" placeholder="e.g., Main Auditorium">
+            </div>
+            <button type="submit" id="eventSubmitBtn" class="btn-submit" style="background-color: var(--secondary-color);">
+                 <span class="loading-spinner" id="eventSpinner"></span>
+                 <span id="eventBtnText">Add to Sidebar</span>
+            </button>
+            <button type="button" id="eventCancelBtn" class="btn-submit" style="background: #666; margin-top: 10px; display: none;">Cancel Edit</button>
+        </form>
+    </div>
+
+    <!-- NEW: Manage Content Section -->
+    <div class="admin-section">
+        <h2 class="section-title"><i class="fas fa-tasks"></i> Manage Content</h2>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('newsTab')">Posted News</button>
+            <button class="tab-btn" onclick="openTab('eventsTab')">Sidebar Events</button>
+        </div>
+
+        <!-- Tab 1: News List -->
+        <div id="newsTab" class="tab-content active">
+            <div class="content-list" id="newsListContainer">
+                <p style="text-align:center; color:#888;">Loading content...</p>
+            </div>
+        </div>
+
+        <!-- Tab 2: Events List -->
+        <div id="eventsTab" class="tab-content">
+            <div class="content-list" id="eventListContainer">
+                <p style="text-align:center; color:#888;">Loading content...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Firebase & Cloudinary Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // 1. Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMfqgoLokIDWFytvY-cudx3LqLYdiZrKc",
+      authDomain: "hadith-publication-site.firebaseapp.com",
+      projectId: "hadith-publication-site",
+      storageBucket: "hadith-publication-site.firebasestorage.app",
+      messagingSenderId: "51327769685",
+      appId: "1:51327769685:web:ded6ef0884f381a64048dc",
+      measurementId: "G-BDBLBRJB5N"
+    };
+
+    const CLOUDINARY_CLOUD_NAME = "dkvlobelc"; 
+    const CLOUDINARY_UPLOAD_PRESET = "SFADC-Hadith";
+
+    // 2. Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Auto sign-in
+    signInAnonymously(auth).then(() => {
+        console.log("Connected to Firebase securely.");
+    }).catch(console.error);
+
+    // 3. State Management
+    let newsList = []; 
+    let eventsList = [];
+
+    // 4. Cloudinary Upload Helper
+    async function uploadToCloudinary(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            return data.secure_url;
+        } catch (error) {
+            console.error("Cloudinary Upload Error:", error);
+            throw new Error("Image upload failed");
+        }
+    }
+
+    // 5. Real-time Listeners (READ)
+    
+    // Listen for NEWS
+    const newsCol = collection(db, "news");
+    onSnapshot(newsCol, (snapshot) => {
+        newsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderNews();
+    });
+
+    // Listen for EVENTS
+    const eventsCol = collection(db, "events");
+    onSnapshot(eventsCol, (snapshot) => {
+        eventsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderEvents();
+    });
+
+    // 6. Form Handlers (CREATE / UPDATE)
+
+    // --- News Submit ---
+    const newsForm = document.getElementById('newsForm');
+    newsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('newsEditId').value;
+        const fileInput = document.getElementById('newsImage');
+        const submitBtn = document.getElementById('newsSubmitBtn');
+        const spinner = document.getElementById('newsSpinner');
+        const btnText = document.getElementById('newsBtnText');
+
+        // UI Loading State
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.textContent = id ? "Updating..." : "Publishing...";
+
+        try {
+            let imageUrl = null;
+
+            // Handle Image Upload
+            if (fileInput.files.length > 0) {
+                btnText.textContent = "Uploading Image...";
+                imageUrl = await uploadToCloudinary(fileInput.files[0]);
+            } else if (id) {
+                // If editing and no new file, find existing URL
+                const existingDoc = newsList.find(n => n.id === id);
+                if (existingDoc) imageUrl = existingDoc.imageUrl;
+            } else {
+                // New post but no image? Use placeholder
+                imageUrl = "https://placehold.co/600x400?text=No+Image";
+            }
+
+            const payload = {
+                title: document.getElementById('newsTitle').value,
+                desc: document.getElementById('newsDesc').value,
+                category: document.getElementById('newsCategory').value,
+                date: document.getElementById('newsDate').value,
+                spotlight: document.getElementById('isSpotlight').checked,
+                spotlightTag: document.getElementById('spotlightTag').value,
+                imageUrl: imageUrl,
+                timestamp: serverTimestamp()
+            };
+
+            if (id) {
+                await updateDoc(doc(db, "news", id), payload);
+                alert("News updated successfully!");
+                resetNewsForm();
+            } else {
+                await addDoc(collection(db, "news"), payload);
+                alert("News published successfully!");
+                newsForm.reset();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error: " + error.message);
+        } finally {
+            // Reset UI
+            submitBtn.disabled = false;
+            spinner.style.display = 'none';
+            btnText.textContent = id ? "Update Article" : "Publish Article";
+        }
+    });
+
+    // --- Event Submit ---
+    const eventForm = document.getElementById('upcomingForm');
+    eventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('eventEditId').value;
+        const submitBtn = document.getElementById('eventSubmitBtn');
+        const spinner = document.getElementById('eventSpinner');
+        const btnText = document.getElementById('eventBtnText');
+
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.textContent = id ? "Updating..." : "Adding...";
+
+        try {
+            const payload = {
+                name: document.getElementById('upEventName').value,
+                date: document.getElementById('upEventDate').value,
+                color: document.getElementById('upEventColor').value,
+                location: document.getElementById('upEventLoc').value,
+                timestamp: serverTimestamp()
+            };
+
+            if (id) {
+                await updateDoc(doc(db, "events", id), payload);
+                alert("Event updated!");
+                resetEventForm();
+            } else {
+                await addDoc(collection(db, "events"), payload);
+                alert("Event added!");
+                eventForm.reset();
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error: " + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            spinner.style.display = 'none';
+            btnText.textContent = id ? "Update Event" : "Add to Sidebar";
+        }
+    });
+
+    // 7. Render Functions (UI)
+    
+    // Attach to window so HTML onClick works
+    window.openTab = function(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(tabId === 'newsTab') {
+            document.querySelector('button[onclick="openTab(\'newsTab\')"]').classList.add('active');
+        } else {
+            document.querySelector('button[onclick="openTab(\'eventsTab\')"]').classList.add('active');
+        }
+    };
+
+    function renderNews() {
+        const container = document.getElementById('newsListContainer');
+        container.innerHTML = '';
+
+        if (newsList.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">No news articles found.</p>';
+            return;
+        }
+
+        newsList.forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'content-item';
+            div.innerHTML = `
+                <img src="${item.imageUrl || 'https://placehold.co/100'}" class="item-img" alt="News Image">
+                <div class="item-info">
+                    <div class="item-title">${item.title} ${item.spotlight ? '<i class="fas fa-star" style="color:#f59e0b; font-size:0.8em;" title="Spotlight"></i>' : ''}</div>
+                    <div class="item-meta">
+                        <span class="badge">${item.category}</span>
+                        <span><i class="far fa-calendar"></i> ${item.date}</span>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-icon btn-edit" data-id="${item.id}" onclick="window.editNews('${item.id}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="btn-icon btn-delete" onclick="window.deleteNews('${item.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderEvents() {
+        const container = document.getElementById('eventListContainer');
+        container.innerHTML = '';
+
+        if (eventsList.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">No upcoming events found.</p>';
+            return;
+        }
+
+        eventsList.forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'content-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <div class="item-title">${item.name}</div>
+                    <div class="item-meta">
+                        <span class="badge" style="background-color:${getColorCode(item.color)}; color:white;">${item.color.replace('bg-', '')}</span>
+                        <span><i class="far fa-calendar"></i> ${item.date}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${item.location}</span>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-icon btn-edit" onclick="window.editEvent('${item.id}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="btn-icon btn-delete" onclick="window.deleteEvent('${item.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // 8. Edit/Delete Actions
+    
+    window.editNews = function(id) {
+        const item = newsList.find(n => n.id === id);
+        if(!item) return;
+
+        document.getElementById('newsTitle').value = item.title;
+        document.getElementById('newsDesc').value = item.desc;
+        document.getElementById('newsCategory').value = item.category;
+        document.getElementById('newsDate').value = item.date;
+        document.getElementById('isSpotlight').checked = item.spotlight || false;
+        document.getElementById('spotlightTag').value = item.spotlightTag || '';
+        
+        document.getElementById('newsEditId').value = id;
+        document.getElementById('newsBtnText').textContent = 'Update Article';
+        document.getElementById('newsSubmitBtn').classList.add('editing');
+        document.getElementById('newsCancelBtn').style.display = 'block';
+        document.getElementById('imageHelp').style.display = 'block';
+        
+        document.querySelector('.admin-section').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.deleteNews = async function(id) {
+        if(confirm('Are you sure you want to delete this news item?')) {
+            try {
+                await deleteDoc(doc(db, "news", id));
+            } catch(e) {
+                alert("Error deleting: " + e.message);
+            }
+        }
+    };
+
+    window.editEvent = function(id) {
+        const item = eventsList.find(e => e.id === id);
+        if(!item) return;
+
+        document.getElementById('upEventName').value = item.name;
+        document.getElementById('upEventDate').value = item.date;
+        document.getElementById('upEventColor').value = item.color;
+        document.getElementById('upEventLoc').value = item.location;
+
+        document.getElementById('eventEditId').value = id;
+        document.getElementById('eventBtnText').textContent = 'Update Event';
+        document.getElementById('eventSubmitBtn').classList.add('editing');
+        document.getElementById('eventCancelBtn').style.display = 'block';
+
+        document.querySelectorAll('.admin-section')[1].scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.deleteEvent = async function(id) {
+        if(confirm('Delete this event?')) {
+            try {
+                await deleteDoc(doc(db, "events", id));
+            } catch(e) {
+                alert("Error deleting: " + e.message);
+            }
+        }
+    };
+
+    // Helper: Reset Forms
+    document.getElementById('newsCancelBtn').addEventListener('click', resetNewsForm);
+    document.getElementById('eventCancelBtn').addEventListener('click', resetEventForm);
+
+    function resetNewsForm() {
+        document.getElementById('newsForm').reset();
+        document.getElementById('newsEditId').value = '';
+        document.getElementById('newsBtnText').textContent = 'Publish Article';
+        document.getElementById('newsSubmitBtn').classList.remove('editing');
+        document.getElementById('newsCancelBtn').style.display = 'none';
+        document.getElementById('imageHelp').style.display = 'none';
+    }
+
+    function resetEventForm() {
+        document.getElementById('upcomingForm').reset();
+        document.getElementById('eventEditId').value = '';
+        document.getElementById('eventBtnText').textContent = 'Add to Sidebar';
+        document.getElementById('eventSubmitBtn').classList.remove('editing');
+        document.getElementById('eventCancelBtn').style.display = 'none';
+    }
+
+    function getColorCode(bgClass) {
+        switch(bgClass) {
+            case 'bg-blue': return '#3b82f6';
+            case 'bg-green': return '#22c55e';
+            case 'bg-red': return '#ef4444';
+            case 'bg-amber': return '#f59e0b';
+            default: return '#94a3b8';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted Messages - Admin</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* --- Google Fonts & Variables --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #543d85;
+            --primary-light: #6a529e;
+            --secondary-color: #668bb4;
+            --bg-light: #f8f9fa;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --max-width: 1200px;
+            --transition: all 0.3s ease-in-out;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --slate-800: #1e293b;
+        }
+
+        /* --- Global & Reusable --- */
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* --- ADMIN NAVIGATION STYLES --- */
+        .admin-navbar {
+            background-color: var(--slate-800);
+            padding: 0 20px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative; /* Sits normally in flow */
+            z-index: 2000; 
+        }
+        .admin-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        .admin-brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #FFD700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-links {
+            display: flex;
+            gap: 25px;
+            height: 100%;
+        }
+        .admin-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .admin-link:hover {
+            color: #ffffff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .admin-link.active {
+            color: #ffffff;
+            border-bottom-color: #FFD700;
+        }
+
+        /* Nav Responsive */
+        @media (max-width: 768px) {
+            .admin-nav-container {
+                flex-direction: column;
+                height: auto;
+                padding: 10px 0;
+            }
+            .admin-brand { margin-bottom: 10px; }
+            .admin-links { gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%; }
+            .admin-link { height: auto; padding: 5px 10px; border-bottom: none; background: rgba(255,255,255,0.1); border-radius: 4px; }
+            .admin-link.active { background: var(--primary-color); }
+        }
+
+        /* --- Content Layout --- */
+        .container {
+            max-width: var(--max-width);
+            margin-left: auto; 
+            margin-right: auto; 
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        /* --- Inbox Page Styles --- */
+        .inbox-hero {
+            padding-top: 50px; 
+            padding-bottom: 50px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .inbox-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #FFD700;
+        }
+        
+        .inbox-hero p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 10px;
+        }
+
+        .inbox-section {
+            padding: 40px 0; 
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+        }
+
+        #inbox-container {
+            display: block; 
+        }
+        
+        #inbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+        
+        #loading-indicator, #no-messages {
+            font-size: 1.2rem;
+            text-align: center;
+            color: #777;
+            padding: 40px;
+        }
+        
+        .message-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--primary-color);
+            transition: var(--transition);
+            overflow: hidden; 
+        }
+        
+        .message-card.is-read {
+            background: #f9f9f9;
+            border-left-color: #aaa;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #fdfdfd;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .card-header h4 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+
+        .message-card.is-read .card-header h4 {
+            color: #555;
+        }
+        
+        .mark-as-read-btn {
+            background: var(--success-color);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        
+        .mark-as-read-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .mark-as-read-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .card-body p {
+            margin-bottom: 15px;
+            color: #555;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        
+        .card-body p strong {
+            color: var(--text-dark);
+            min-width: 60px;
+            display: inline-block;
+        }
+        
+        .card-body .message-content {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            white-space: pre-wrap; 
+            border-left: 3px solid #eee;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .message-card.is-read .message-content {
+            background: #f0f0f0;
+        }
+
+        .card-footer {
+            padding: 10px 20px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #888;
+            background: #fcfcfc;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        @media (max-width: 576px) {
+            .inbox-hero { padding-top: 40px; padding-bottom: 30px; }
+            .inbox-section { padding: 30px 0; }
+            #inbox-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVIGATION BAR (ADMIN ONLY) -->
+    <nav class="admin-navbar">
+        <div class="admin-nav-container">
+            <a href="#" class="admin-brand"><i class="fas fa-user-shield"></i> SFADC Admin</a>
+            <div class="admin-links">
+                <a href="news-upload.html" class="admin-link"><i class="fas fa-newspaper"></i> News & Events</a>
+                <a href="publications-upload.html" class="admin-link"><i class="fas fa-book-open"></i> Publications</a>
+                <a href="submitted_email.html" class="admin-link active"><i class="fas fa-envelope"></i> Inbox</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Public Site Header Removed -->
+
+    <main>
+        <!-- Inbox Hero Section -->
+        <section class="inbox-hero">
+            <div class="container">
+                <h1>Submitted Messages</h1>
+            </div>
+        </section>
+
+        <!-- Main Content Section -->
+        <section class="inbox-section">
+
+            <!-- Inbox Container -->
+            <div id="inbox-container" class="container">
+                <div id="inbox-grid">
+                    <p id="loading-indicator">Loading messages...</p>
+                    <p id="no-messages" style="display: none;">No messages found.</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Public Site Footer Removed -->
+
+    <!-- Firebase SDK Imports and logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getFirestore, collection, onSnapshot, doc, updateDoc, query, setLogLevel 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMfqgoLokIDWFytvY-cudx3LqLYdiZrKc",
+            authDomain: "hadith-publication-site.firebaseapp.com",
+            projectId: "hadith-publication-site",
+            storageBucket: "hadith-publication-site.firebasestorage.app",
+            messagingSenderId: "51327769685",
+            appId: "1:51327769685:web:ded6ef0884f381a64048dc",
+            measurementId: "G-BDBLBRJB5N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        setLogLevel('Debug');
+
+        let unsubscribeFromMessages = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Admin Inbox Logic ---
+
+            const inboxContainer = document.getElementById('inbox-container');
+            const inboxGrid = document.getElementById('inbox-grid');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const noMessages = document.getElementById('no-messages');
+            
+            fetchMessages();
+
+            function fetchMessages() {
+                const messagesRef = collection(db, "contactSubmissions");
+                const q = query(messagesRef);
+
+                unsubscribeFromMessages = onSnapshot(q, (snapshot) => {
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        noMessages.style.display = 'block';
+                        inboxGrid.innerHTML = ''; 
+                        inboxGrid.appendChild(noMessages);
+                        return;
+                    }
+                    
+                    noMessages.style.display = 'none';
+                    
+                    let messages = [];
+                    snapshot.forEach((doc) => {
+                        messages.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    messages.sort((a, b) => {
+                        const timeA = a.submittedAt ? a.submittedAt.toMillis() : 0;
+                        const timeB = b.submittedAt ? b.submittedAt.toMillis() : 0;
+                        return timeB - timeA;
+                    });
+                    
+                    renderMessages(messages);
+
+                }, (error) => {
+                    console.error("Error fetching messages: ", error);
+                    loadingIndicator.textContent = 'Error loading messages.';
+                });
+            }
+
+            function renderMessages(messages) {
+                inboxGrid.innerHTML = ''; 
+                
+                messages.forEach(msg => {
+                    const card = document.createElement('div');
+                    card.classList.add('message-card');
+                    if (msg.isRead) {
+                        card.classList.add('is-read');
+                    }
+                    
+                    const timestamp = msg.submittedAt 
+                        ? new Date(msg.submittedAt.toMillis()).toLocaleString()
+                        : 'No date';
+                        
+                    const isRead = msg.isRead === true;
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h4>${msg.name || 'No Name'}</h4>
+                            <button class="mark-as-read-btn" data-id="${msg.id}" ${isRead ? 'disabled' : ''}>
+                                ${isRead ? 'Read' : 'Mark as Read'}
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Subject:</strong> ${msg.subject || 'No Subject'}</p>
+                            <p><strong>Email:</strong> ${msg.email || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${msg.phone || 'N/A'}</p>
+                            <div class="message-content">
+                                ${msg.message || 'No message content.'}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            ${timestamp}
+                        </div>
+                    `;
+                    
+                    inboxGrid.appendChild(card);
+                });
+                
+                inboxGrid.querySelectorAll('.mark-as-read-btn').forEach(btn => {
+                    btn.addEventListener('click', handleMarkAsRead);
+                });
+            }
+            
+            async function handleMarkAsRead(e) {
+                const btn = e.target;
+                const docId = btn.dataset.id;
+                
+                if (!docId) return;
+                
+                btn.disabled = true;
+                btn.textContent = 'Updating...';
+                
+                const docRef = doc(db, "contactSubmissions", docId);
+                
+                try {
+                    await updateDoc(docRef, {
+                        isRead: true
+                    });
+                    console.log(`Document ${docId} marked as read.`);
+                } catch (error) {
+                    console.error("Error updating document: ", error);
+                    btn.disabled = false; 
+                    btn.textContent = 'Mark as Read';
+                }
+            }
+
+        });
+    </script>
+</body>
+
+</html>
